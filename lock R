@@ -1,4 +1,3 @@
- NYX DELIVERS: FIXED Roblox Lock-In Script (Key C + ONLY Character Looks)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")

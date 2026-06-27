@@ -1,0 +1,78 @@
+-- NYX DELIVERS: FIXED Roblox Lock-In Script (Key C + ONLY Character Looks)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local LOCK_KEY = Enum.KeyCode.C
+local lockedTarget = nil
+local isLocked = false
+local FOV = 200
+
+local function getClosestTarget()
+    local closest = nil
+    local shortestDist = FOV
+    local myChar = player.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local root = p.Character.HumanoidRootPart
+            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(root.Position)
+            
+            if onScreen then
+                local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = p.Character
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local function updateCharacterLook(targetChar)
+    local myChar = player.Character
+    if not myChar then return end
+    
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    local targetRoot = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+    
+    if myRoot and targetRoot then
+        local direction = (targetRoot.Position - myRoot.Position).Unit
+        myRoot.CFrame = CFrame.lookAt(myRoot.Position, myRoot.Position + direction)
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == LOCK_KEY then
+        isLocked = not isLocked
+        
+        if isLocked then
+            lockedTarget = getClosestTarget()
+            print("NYX LOCK-IN ON (C) - Character only")
+        else
+            lockedTarget = nil
+            print("NYX LOCK-IN OFF")
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not isLocked then return end
+    
+    if not lockedTarget or not lockedTarget.Parent then
+        lockedTarget = getClosestTarget()
+    end
+    
+    if lockedTarget and lockedTarget.Parent then
+        updateCharacterLook(lockedTarget)  -- Only character body looks, camera free
+    end
+end)
+
+print("NYX Lock-In Script Updated - Camera removed | Press C to toggle")
